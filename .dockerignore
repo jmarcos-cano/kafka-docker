@@ -1,0 +1,2 @@
+bin/confluent/*
+bin/kafka_2.11-0.10.2/*

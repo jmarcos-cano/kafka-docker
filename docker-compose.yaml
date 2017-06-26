@@ -1,0 +1,13 @@
+version: '3'
+services:
+
+  kafka:
+    image: ${DOCKER_IMAGE}:${DOCKER_IMAGE_VERSION}-${KAFKA_VERSION}
+    env_file:
+      - config/kafka.properties
+    command: bash  -c "bash start-kafka.sh && cat $$KAFKA_HOME/config/server.properties && env |grep -i kafka " 
+    
+  zookeeper:
+    image: zookeeper:3.4
+    ports:
+     - 2181:2181
