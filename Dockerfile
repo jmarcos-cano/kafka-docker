@@ -6,7 +6,7 @@ ARG SCALA_VERSION=2.11
 
 ENV KAFKA_VERSION=${KAFKA_VERSION} SCALA_VERSION=${SCALA_VERSION} \
     KAFKA_HOME=/opt/kafka PATH=${PATH}:${KAFKA_HOME}/bin \
-    EXPOSED_VOLUME=/kafka
+    EXPOSED_VOLUME=/kafka 
 
 ADD internal/scripts/ /usr/bin/
 
@@ -16,10 +16,13 @@ RUN apk add --no-cache --virtual .build-deps unzip wget curl jq coreutils  \
     && chmod a+x /usr/bin/download-kafka.sh && sync \
     && echo -e "\n******** download Kakfa ********\n"  \
    # && /usr/bin/download-kafka.sh \
+
     && tar xfz /tmp/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz -C /opt \
     && rm /tmp/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz \
     && ln -s /opt/kafka_${SCALA_VERSION}-${KAFKA_VERSION} ${KAFKA_HOME} \
-    && apk del .build-deps
+    && apk del .build-deps \
+    && echo -e "export BROKER_ID_TEST=$(echo $HOSTNAME| sed -e s/[^0-9]//g|cut -c1-2)" > /etc/profile.d/env.sh \
+    && chmod +x /etc/profile.d/env.sh
 
 VOLUME ["${EXPOSED_VOLUME}"]
 

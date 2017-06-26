@@ -1,7 +1,8 @@
 #!/bin/bash
 
-BROKER_ID_TEST=$(echo $HOSTNAME| sed -e s/[^0-9]//g)
-export BROKER_ID_TEST=$(echo ${BROKER_ID_TEST:0:2})
+export BROKER_ID_TEST=$(echo $HOSTNAME| sed -e s/[^0-9]//g|cut -c1-2)
+
+
 
 if [[ -z "$KAFKA_PORT" ]]; then
     export KAFKA_PORT=9092

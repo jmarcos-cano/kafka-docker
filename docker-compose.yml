@@ -1,13 +1,24 @@
 version: '3'
 services:
 
-  kafka:
+  kafka-0:
     image: ${DOCKER_IMAGE}:${DOCKER_IMAGE_VERSION}-${KAFKA_VERSION}
     env_file:
       - config/kafka.properties
     ports:
       - 9092:9092
-    command: bash  -c "bash start-kafka.sh && cat $$KAFKA_HOME/config/server.properties && env |grep -i kafka " 
+    #command: bash  -c "bash start-kafka.sh && cat $$KAFKA_HOME/config/server.properties && env |grep -i kafka " 
+    networks: 
+      - kafka-net
+  
+
+  kafka-1:
+    image: ${DOCKER_IMAGE}:${DOCKER_IMAGE_VERSION}-${KAFKA_VERSION}
+    env_file:
+      - config/kafka.1.properties
+    ports:
+      - 9093:9093
+    #command: bash  -c "bash start-kafka.sh && cat $$KAFKA_HOME/config/server.properties && env |grep -i kafka " 
     networks: 
       - kafka-net
     
