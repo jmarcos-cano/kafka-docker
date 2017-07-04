@@ -43,11 +43,35 @@ bin/kafka-console-consumer.sh --bootstrap-server localhost:9092 --from-beginning
 
 ### create multi-broker topic
 
-bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 2 --partition 1 --topic distributed-topic
+bin/kafka-topics.sh --create --zookeeper localhost:2181 --replication-factor 2 --partition 1 --topic distro
 
-### 
+### Describe topics
 
-bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic distributed-topic
+bin/kafka-topics.sh --describe --zookeeper localhost:2181 --topic distro
+
+
+### Produce messages in sync mode.
+
+bin/kafka-console-producer.sh --broker-list kafka:9092 kafka-2:9093 --sync --topic distro
 
 
 
+
+------
+# Kafka Manager
+
+create automatically a cluster
+
+``` bash
+curl localhost:9000/clusters --data "name=main&zkHosts=zookeeper:2181&kafkaVersion=0.9.0.1" -X POST
+```
+
+
+
+#### Related Issues
+
+- *MAIN* https://stackoverflow.com/questions/41868161/kafka-in-kubernetes-cluster-how-to-publish-consume-messages-from-outside-of-kub
+
+- https://stackoverflow.com/questions/42998859/kafka-server-configuration-listeners-vs-advertised-listeners
+
+- https://issues.jboss.org/browse/DBZ-39?_sscc=t
