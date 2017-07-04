@@ -1,34 +1,107 @@
 version: '3'
 services:
 
-  kafka-0:
-    image: ${DOCKER_IMAGE}:${DOCKER_IMAGE_VERSION}-${KAFKA_VERSION}
+  kafka: &kafka
+    #image: mcano/kafka:v1.0-0.10.2.0
+    image: confluentinc/cp-kafka:3.2.2-1
     env_file:
       - config/kafka.properties
     ports:
       - 9092:9092
     #command: bash  -c "bash start-kafka.sh && cat $$KAFKA_HOME/config/server.properties && env |grep -i kafka " 
     networks: 
-      - kafka-net
-  
+      - kafka-stack-network
+    environment: &base
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:9092
+      KAFKA_BROKER_ID: -1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ZOOKEEPER_TIMEOUT_MS: 500
+      KAFKA_DELETE_TOPIC_ENABLED: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLED: "true"
+      JMX_PORT: 9999
+    depends_on:
+      - zookeeper
 
-  kafka-1:
-    image: ${DOCKER_IMAGE}:${DOCKER_IMAGE_VERSION}-${KAFKA_VERSION}
-    env_file:
-      - config/kafka.1.properties
+      
+
+  kafka-2:
+    <<: *kafka
     ports:
-      - 9093:9093
-    #command: bash  -c "bash start-kafka.sh && cat $$KAFKA_HOME/config/server.properties && env |grep -i kafka " 
-    networks: 
-      - kafka-net
+      - 9093:9092
+    environment:
+      <<: *base
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-2:9092
+
+
+  kafka-3:
+    <<: *kafka
+    ports:
+      - 9094:9092
+    environment:
+      <<: *base
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka-3:9092
+
+
+
+  kafka-rest:
+    image: confluentinc/cp-kafka-rest:3.2.2
+    ports:
+      - 8082:8082
+    networks:
+      - kafka-stack-network
+    environment:
+      - KAFKA_REST_ZOOKEEPER_CONNECT=zookeeper
+      - KAFKA_REST_ID=1
+      - KAFKA_REST_LISTENERS=http://0.0.0.0:8082/
+      - KAFKA_REST_HOST_NAME=kafka-rest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - zookeeper
+      - kafka
+      - kafka-2
     
   zookeeper:
     image: zookeeper:3.4
     ports:
      - 2181:2181
+    environment:
+      - ZOO_TICK_TIME=4000
     networks:
-      - kafka-net
+      - kafka-stack-network
 
+
+  kafka-manager:
+    image: sheepkiller/kafka-manager:latest
+    ports:
+      - "9000:9000"
+    links:
+      - zookeeper
+      - kafka
+    environment:
+      ZK_HOSTS: zookeeper:2181
+      APPLICATION_SECRET: letmein
+      KM_ARGS: -Djava.net.preferIPv4Stack=true
+      JMX_PORT: 9999
+    networks:
+      - kafka-stack-network
+    depends_on:
+      - zookeeper
+
+  # visualizer:
+  #   image: dockersamples/visualizer:stable
+  #   ports:
+  #     - "8080:8080"
+  #   volumes:
+  #     - "/var/run/docker.sock:/var/run/docker.sock"
+  #   # deploy:
+  #   #   placement:
+  #   #     constraints: [node.role == manager]
+  #   networks:
+  #     - kafka-stack-network
 
 networks:
-  kafka-net:
+  kafka-stack-network:
