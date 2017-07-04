@@ -8,34 +8,30 @@ ENV KAFKA_VERSION=${KAFKA_VERSION} SCALA_VERSION=${SCALA_VERSION} \
     KAFKA_HOME=/opt/kafka PATH=${PATH}:${KAFKA_HOME}/bin \
     EXPOSED_VOLUME=/kafka 
 
-ADD internal/scripts/ /usr/bin/
+ADD include/scripts/ /usr/bin/
 
 COPY bin/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz /tmp
 
-RUN apk add --no-cache --virtual .build-deps unzip wget curl jq coreutils  \
+RUN apk add --no-cache --virtual .build-deps unzip wget curl jq coreutils  tar \
     && chmod a+x /usr/bin/download-kafka.sh && sync \
     && echo -e "\n******** download Kakfa ********\n"  \
-   # && /usr/bin/download-kafka.sh \
-
+    && /usr/bin/download-kafka.sh \
     && tar xfz /tmp/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz -C /opt \
     && rm /tmp/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz \
     && ln -s /opt/kafka_${SCALA_VERSION}-${KAFKA_VERSION} ${KAFKA_HOME} \
     && apk del .build-deps \
-    && echo -e "export BROKER_ID_TEST=$(echo $HOSTNAME| sed -e s/[^0-9]//g|cut -c1-2)" > /etc/profile.d/env.sh \
-    && chmod +x /etc/profile.d/env.sh
+    && chmod +x /usr/bin/*.sh
 
 VOLUME ["${EXPOSED_VOLUME}"]
 
 
 
-#ADD broker-list.sh /usr/bin/broker-list.sh
-#ADD create-topics.sh /usr/bin/create-topics.sh
-# The scripts need to have executable permission
-RUN chmod a+x /usr/bin/*.sh 
 #    && chmod a+x /usr/bin/broker-list.sh \
 #    && chmod a+x /usr/bin/create-topics.sh
 # Use "exec" form so that it runs as PID 1 (useful for graceful shutdown)
 CMD ["start-kafka.sh"]
 
 
-LABEL maintainer="Marcos Cano <jmarcos.cano@gmail.com>"
+LABEL   maintainer="Marcos Cano <jmarcos.cano@gmail.com>" \
+        org.label-schema.schema-version="v1.0-${SCALA_VERSION}-${KAFKA_VERSION}" \
+        org.label-schema.description = "Kafka "
