@@ -7,16 +7,15 @@ services:
       - config/kafka.properties
     ports:
       - 9092:9092
-    #command: bash  -c "bash start-kafka.sh && cat $$KAFKA_HOME/config/server.properties && env |grep -i kafka " 
     networks: 
-      - kafka-net
+      - kafka-stack-network
     depends_on:
       - zookeeper
     deploy:
       replicas: 1
       resources:
         limits:
-          cpus: "0.1"
+          cpus: "0.4"
           memory: 300M
       restart_policy:
         condition: on-failure
@@ -26,7 +25,7 @@ services:
     ports:
      - 2181:2181
     networks:
-      - kafka-net
+      - kafka-stack-network
     deploy:
       replicas: 1
       resources:
@@ -36,6 +35,52 @@ services:
       restart_policy:
         condition: on-failure
 
+
+  
+  kafka-rest:
+    image: confluentinc/cp-kafka-rest:3.2.2
+    ports:
+      - 8082:8082
+    networks:
+      - kafka-stack-network
+    environment:
+      - KAFKA_REST_ZOOKEEPER_CONNECT=zookeeper
+      - KAFKA_REST_ID=1
+      - KAFKA_REST_LISTENERS=http://0.0.0.0:8082/
+      - KAFKA_REST_HOST_NAME=kafka-rest
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:8082/topics"]
+      interval: 1m30s
+      timeout: 10s
+      retries: 3
+    depends_on:
+      - zookeeper
+      - kafka
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
+
+  kafka-manager:
+    image: sheepkiller/kafka-manager:latest
+    ports:
+      - "9090:9000"
+    links:
+      - zookeeper
+      - kafka
+    environment:
+      ZK_HOSTS: zookeeper:2181
+      APPLICATION_SECRET: letmein
+      KM_ARGS: -Djava.net.preferIPv4Stack=true
+      JMX_PORT: 9999
+    networks:
+      - kafka-stack-network
+    depends_on:
+      - zookeeper
+    deploy:
+      placement:
+        constraints: [node.role == manager]
+
   
   visualizer:
     image: dockersamples/visualizer:stable
@@ -43,12 +88,13 @@ services:
       - "8080:8080"
     volumes:
       - "/var/run/docker.sock:/var/run/docker.sock"
+    networks:
+      - kafka-stack-network
     deploy:
       placement:
         constraints: [node.role == manager]
-    networks:
-      - kafka-net
+    
 
 
 networks:
-  kafka-net:
+  kafka-stack-network:
