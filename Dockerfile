@@ -36,4 +36,4 @@ CMD ["start-kafka.sh"]
 LABEL   maintainer="Marcos Cano <jmarcos.cano@gmail.com>" \
         org.label-schema.schema-version="v1.0-${SCALA_VERSION}-${KAFKA_VERSION}" \
         org.label-schema.description = "Kafka " \
-        org.label-schema.vcs-url = "https://github.com/jmarcos-cano/kafka-docker"
+        org.label-schema.vcs-url = "https://github.com/jmarcos-cano/kafka-docker" 
