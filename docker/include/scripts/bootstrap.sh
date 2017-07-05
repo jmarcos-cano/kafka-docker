@@ -1,10 +1,10 @@
 #!/bin/bash
 
 
-set -o verbose \
+set -o xtrace \
     -o errexit
 
-  
+
 
 # get first 2 digits from Container id
 export BROKER_CONTAINER_ID=$(echo $HOSTNAME| sed -e s/[^0-9]//g|cut -c1-2)
@@ -12,7 +12,26 @@ export BROKER_CONTAINER_ID=$(echo $HOSTNAME| sed -e s/[^0-9]//g|cut -c1-2)
 
 
 if [ -z ${KAFKA_ZOOKEEPER_CONNECT+x} ]; then echo "KAFKA_ZOOKEEPER_CONNECT is unset"; else echo "KAFKA_ZOOKEEPER_CONNECT is set to '${KAFKA_ZOOKEEPER_CONNECT}'"; fi
-if [ -z ${KAFKA_ADVERTISED_LISTENERS+x} ]; then echo "KAFKA_ADVERTISED_LISTENERS is unset"; else echo "KAFKA_ADVERTISED_LISTENERS is set to '${KAFKA_ADVERTISED_LISTENERS}'"; fi
+
+
+
+## puedo detectar si la variable incluye ${variables}
+## y si si trae expandirlas con "echo ${MAIN_VAR}"
+if [ -z ${KAFKA_ADVERTISED_LISTENERS+x} ]; then 
+  #export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${HOSTNAME}:9092
+  ## NEED A WAY OF SETTING THIS TO ANYTHING :/ 
+  echo -e "KAFKA_ADVERTISED_LISTENERS is unset"
+  exit 1
+else 
+  if [[ -n $(echo ${KAFKA_ADVERTISED_LISTENERS} | grep -oE '\$\{.*\}') ]];then
+    # variable contains ${variable} inside
+    export KAFKA_ADVERTISED_LISTENERS=$(eval echo  ${KAFKA_ADVERTISED_LISTENERS})
+  elif [[ -n $(echo ${KAFKA_ADVERTISED_LISTENERS}|grep -oE '\$') ]];then
+    #variable contains $variable
+    export KAFKA_ADVERTISED_LISTENERS=$(eval echo  ${KAFKA_ADVERTISED_LISTENERS})
+  fi
+  echo "KAFKA_ADVERTISED_LISTENERS is set to '${KAFKA_ADVERTISED_LISTENERS}'"
+fi
 
 
 # By default, LISTENERS is derived from ADVERTISED_LISTENERS by replacing
@@ -29,22 +48,21 @@ if [[ -z "${KAFKA_LOG_DIRS-}" ]];then
 fi
 mkdir -p ${KAFKA_LOG_DIRS}
 
+
+
 # advertised.host, advertised.port, host and port are deprecated. Exit if these properties are set.
 if [[ -n "${KAFKA_ADVERTISED_PORT-}" ]];then
   echo "advertised.port is deprecated. Please use KAFKA_ADVERTISED_LISTENERS instead."
   exit 1
 fi
-
 if [[ -n "${KAFKA_ADVERTISED_HOST-}" ]];then
   echo "advertised.host is deprecated. Please use KAFKA_ADVERTISED_LISTENERS instead."
   exit 1
 fi
-
 if [[ -n "${KAFKA_HOST-}" ]];then
   echo "host is deprecated. Please use KAFKA_ADVERTISED_LISTENERS instead."
   exit 1
 fi
-
 if [[ -n "${KAFKA_PORT-}" ]];then
   echo "port is deprecated. Please use KAFKA_ADVERTISED_LISTENERS instead."
   exit 1
@@ -74,6 +92,7 @@ if [[ -n "$KAFKA_HEAP_OPTS" ]]; then
 fi
 
 
+env > /tmp/env.log
 
 for VAR in $(env)
 do
@@ -94,5 +113,5 @@ if [[ -n "$CUSTOM_INIT_SCRIPT" ]] ; then
   eval $CUSTOM_INIT_SCRIPT
 fi
 
-create-topics.sh 2>&1 &
+create-topics.sh 2>&1 |tee -a /tmp/create-topics.log &
 exec $KAFKA_HOME/bin/kafka-server-start.sh $KAFKA_HOME/config/server.properties
