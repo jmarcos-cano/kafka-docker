@@ -4,7 +4,7 @@ services:
   kafka_builder:
     image: ${DOCKER_IMAGE}:${DOCKER_IMAGE_VERSION}-${KAFKA_VERSION}
     build: 
-      context: docker/
+      context: .
       args:
         - KAFKA_VERSION
         - SCALA_VERSION
