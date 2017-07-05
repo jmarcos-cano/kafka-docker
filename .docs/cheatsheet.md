@@ -5,6 +5,7 @@
 
 bin/zookeeper-shell.sh localhost:2181 <<< "ls /brokers/ids"
 
+bin/zookeeper-shell.sh localhost:2181 <<< "get /brokers/ids/1005"
 
 
 # Single broker
