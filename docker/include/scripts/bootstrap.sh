@@ -15,16 +15,20 @@ if [ -z ${KAFKA_ZOOKEEPER_CONNECT+x} ]; then echo "KAFKA_ZOOKEEPER_CONNECT is un
 
 
 
-## puedo detectar si la variable incluye ${variables}
-## y si si trae expandirlas con "echo ${MAIN_VAR}"
+
 if [ -z ${KAFKA_ADVERTISED_LISTENERS+x} ]; then 
-  #export KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${HOSTNAME}:9092
-  ## NEED A WAY OF SETTING THIS TO ANYTHING :/ 
   echo -e "KAFKA_ADVERTISED_LISTENERS is unset"
-  exit 1
-else 
+
+
+else    
   if [[ -n $(echo ${KAFKA_ADVERTISED_LISTENERS} | grep -oE '\$\{.*\}') ]];then
-    # variable contains ${variable} inside
+    if [[ -n "$KAFKA_ADVERTISED_LISTENERS_COMMAND" ]] \
+      && [[ -n  $(echo ${KAFKA_ADVERTISED_LISTENERS} |grep -oE '\$\{KAFKA\_ADVERTISED\_LISTENERS\_COMMAND\}') ]]; then
+      #Support KAFKA_ADVERTISED_LISTENERS=PLAINTEXT://${KAFKA_ADVERTISED_LISTENERS_COMMAND}:9092
+      export KAFKA_ADVERTISED_LISTENERS_COMMAND=$(eval ${KAFKA_ADVERTISED_LISTENERS_COMMAND})
+      export KAFKA_ADVERTISED_LISTENERS=$(eval echo  ${KAFKA_ADVERTISED_LISTENERS})
+    fi
+    # variable contains ${variable} inside, usually ${HOSTNAME}
     export KAFKA_ADVERTISED_LISTENERS=$(eval echo  ${KAFKA_ADVERTISED_LISTENERS})
   elif [[ -n $(echo ${KAFKA_ADVERTISED_LISTENERS}|grep -oE '\$') ]];then
     #variable contains $variable
