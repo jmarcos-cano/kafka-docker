@@ -58,7 +58,7 @@ services:
       - KAFKA_REST_ID=1
       - KAFKA_REST_LISTENERS=http://0.0.0.0:8082/
       #- KAFKA_REST_HOST_NAME=kafka-rest
-    command: ["bash", "-c" , "export KAFKA_REST_HOST_NAME=$${HOSTNAME} && exec /etc/confluent/docker/run"]
+    command: ["bash", "-c" , "export KAFKA_REST_HOST_NAME=$${HOSTNAME} KAFKA_REST_ID=`echo $$HOSTNAME| sed -e s/[^0-9]//g|cut -c1-2` && exec /etc/confluent/docker/run"]
     healthcheck:
       test: ["CMD", "curl", "-f", "http://localhost:8082"]
       interval: 1m30s
