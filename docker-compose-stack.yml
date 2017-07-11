@@ -67,8 +67,9 @@ services:
       - zookeeper
       - kafka
     deploy:
-      placement:
-        constraints: [node.role == manager]
+      replicas: 1
+      restart_policy:
+        condition: on-failure
 
 
   kafka-manager:
@@ -85,8 +86,10 @@ services:
     depends_on:
       - zookeeper
     deploy:
-      placement:
-        constraints: [node.role == manager]
+      replicas: 1
+      restart_policy:
+        condition: on-failure
+  
 
   
   visualizer:
