@@ -2,13 +2,11 @@ version: '3'
 services:
 
   kafka: &kafka
-    #image: mcano/kafka:v1.0-0.10.2.0
-    image: confluentinc/cp-kafka:3.2.2-1
+    image: mcano/kafka:v0.0.0-0.10.2.0
     env_file:
       - config/kafka.properties
     ports:
       - 9092:9092
-    #command: bash  -c "bash start-kafka.sh && cat $$KAFKA_HOME/config/server.properties && env |grep -i kafka " 
     networks: 
       - kafka-stack-network
     environment: &base
