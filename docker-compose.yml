@@ -2,7 +2,7 @@ version: '3'
 services:
 
   kafka: &kafka
-    image: mcano/kafka:v0.0.0-0.10.2.0
+    image: mcano/kafka:v1.0.0-0.10.2.0
     env_file:
       - config/kafka.properties
     ports:
