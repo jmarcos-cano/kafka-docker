@@ -2,9 +2,17 @@ version: '3'
 services:
 
   kafka:
-    image: mcano/kafka:v1.0-0.10.2.0
+    image: mcano/kafka:v0.0.0-0.10.2.0
     env_file:
       - config/kafka.properties
+    environment:
+      #KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://$${HOSTNAME}:9092
+      KAFKA_BROKER_ID: -1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      KAFKA_ZOOKEEPER_TIMEOUT_MS: 500
+      KAFKA_DELETE_TOPIC_ENABLED: "true"
+      KAFKA_AUTO_CREATE_TOPICS_ENABLED: "true"
+      JMX_PORT: 9999
     ports:
       - 9092:9092
     networks: 
@@ -12,11 +20,11 @@ services:
     depends_on:
       - zookeeper
     deploy:
-      replicas: 1
+      replicas: 3
       resources:
         limits:
           cpus: "0.4"
-          memory: 300M
+          memory: 800M
       restart_policy:
         condition: on-failure
   
@@ -30,10 +38,11 @@ services:
       replicas: 1
       resources:
         limits:
-          cpus: "0.1"
+          cpus: "0.1  "
           memory: 100M
       restart_policy:
         condition: on-failure
+
 
 
   
@@ -49,7 +58,7 @@ services:
       - KAFKA_REST_LISTENERS=http://0.0.0.0:8082/
       - KAFKA_REST_HOST_NAME=kafka-rest
     healthcheck:
-      test: ["CMD", "curl", "-f", "http://localhost:8082/topics"]
+      test: ["CMD", "curl", "-f", "http://localhost:8082"]
       interval: 1m30s
       timeout: 10s
       retries: 3
@@ -65,9 +74,6 @@ services:
     image: sheepkiller/kafka-manager:latest
     ports:
       - "9090:9000"
-    links:
-      - zookeeper
-      - kafka
     environment:
       ZK_HOSTS: zookeeper:2181
       APPLICATION_SECRET: letmein
