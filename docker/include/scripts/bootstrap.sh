@@ -52,7 +52,11 @@ if [[ -z "${KAFKA_LOG_DIRS-}" ]];then
 fi
 mkdir -p ${KAFKA_LOG_DIRS}
 
-
+if [[ -n ${SYM_LOG_DIRS} ]] ;then
+  mkdir -p /var/log/kafka/kafka-logs-$HOSTNAME 
+  ln -sf /dev/stdout /var/log/kafka/kafka-logs-$HOSTNAME/access.log 
+  ln -sf /dev/stderr /var/log/kafka/kafka-logs-$HOSTNAME/error.log 
+fi
 
 # advertised.host, advertised.port, host and port are deprecated. Exit if these properties are set.
 if [[ -n "${KAFKA_ADVERTISED_PORT-}" ]];then

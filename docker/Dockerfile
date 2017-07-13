@@ -5,27 +5,29 @@ ARG SCALA_VERSION=2.11
 
 
 ENV KAFKA_VERSION=${KAFKA_VERSION} SCALA_VERSION=${SCALA_VERSION} \
-    KAFKA_HOME=/opt/kafka PATH=${PATH}:${KAFKA_HOME}/bin \
-    EXPOSED_VOLUME=/kafka 
+    KAFKA_HOME_BASE=/opt KAFKA_HOME=/opt/kafka PATH=${PATH}:${KAFKA_HOME}/bin \
+    EV_KAFKA_DATA=/kafka 
 
-ADD include/scripts/ /usr/bin/
+ADD include/ /usr/bin/
 
 COPY bin/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz /tmp
-
-RUN apk add --no-cache --virtual .build-deps unzip wget curl jq coreutils  tar \
+RUN apk add -q --no-cache --virtual .build-deps unzip wget curl jq coreutils tar \
     && chmod a+x /usr/bin/download-kafka.sh && sync \
-    && echo -e "\n******** download Kakfa ********\n"  \
-    && /usr/bin/download-kafka.sh \
-    && tar xfz /tmp/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz -C /opt \
+    && echo -e "\n******** Download Kakfa ********\n"  \
+   # && /usr/bin/download-kafka.sh \
+    && echo -e "\n******** Installing Kakfa ********\n"  \
+    && tar xfz /tmp/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz -C ${KAFKA_HOME_BASE} \
     && rm /tmp/kafka_${SCALA_VERSION}-${KAFKA_VERSION}.tgz \
-    && ln -s /opt/kafka_${SCALA_VERSION}-${KAFKA_VERSION} ${KAFKA_HOME} \
-    && apk del .build-deps \
-    && chmod +x /usr/bin/*.sh
+    && ln -s ${KAFKA_HOME_BASE}/kafka_${SCALA_VERSION}-${KAFKA_VERSION} ${KAFKA_HOME} \
+    && apk del -q .build-deps \
+    && chmod +x /usr/bin/*.sh \
+    && mkdir -p ${EV_KAFKA_DATA} 
 
-VOLUME ["${EXPOSED_VOLUME}"]
+
+VOLUME ["${EV_KAFKA_DATA}"]
 
 # Use "exec" form so that it runs as PID 1 (useful for graceful shutdown)
-CMD ["start-kafka.sh"]
+CMD ["bootstrap.sh"]
 
 
 
